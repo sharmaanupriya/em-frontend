@@ -1,25 +1,42 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import Register from './Register';
+import Login from './Login';
+import EventDashboard from './EventDashboard'; 
+import CreateEvent from './CreateEvent'; 
 
-function App() {
+const App = () => {
+  const [token, setToken] = useState(localStorage.getItem('token'));
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    setToken(null);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <div>
+        <nav>
+          <Link to="/register">Register</Link>
+          <Link to="/login">Login</Link>
+          {token && (
+            <>
+              <Link to="/events">Event Dashboard</Link>
+              <Link to="/create-event">Create Event</Link>
+              <button onClick={logout}>Logout</button>
+            </>
+          )}
+        </nav>
+
+        <Routes>
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login setToken={setToken} />} />
+          <Route path="/events" element={<EventDashboard />} /> {/* Using element prop */}
+          <Route path="/create-event" element={<CreateEvent />} /> {/* Using element prop */}
+        </Routes>
+      </div>
+    </Router>
   );
-}
+};
 
 export default App;
