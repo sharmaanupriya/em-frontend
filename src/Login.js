@@ -6,54 +6,61 @@ const Login = ({ setToken }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
-  const navigate = useNavigate(); 
+  const [messageType, setMessageType] = useState(''); // To differentiate between success and error messages
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Attempting to log in with:', email, password);
 
     try {
       const response = await api.post('/auth/login', { email, password });
-      console.log('API Response:', response);
 
       const { token } = response.data;
-      console.log('Received token:', token);
-
       if (token) {
-        localStorage.setItem('token', token);  // Store the token in localStorage
-        setToken(token);  // Set the token in the app state
+        localStorage.setItem('token', token);
+        setToken(token);
         setMessage('Login successful');
-        // navigate('/');  // Redirect to the home page after successful login
+        setMessageType('success'); // Set success message type
+        navigate('/'); // Redirect to the home page after successful login
       } else {
         setMessage('Login failed, no token returned');
+        setMessageType('error'); // Set error message type
       }
     } catch (error) {
-      console.error('Error during login:', error);
       setMessage('Login failed');
+      setMessageType('error'); // Set error message type
     }
   };
 
   return (
-    <div>
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit">Login</button>
-      </form>
-      {message && <p>{message}</p>}
+    <div className="login-container">
+      <div className="login-box">
+        <h2>Login</h2>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <button type="submit" className="login-button">Login</button>
+        </form>
+        {message && <p className={`message ${messageType}`}>{message}</p>} {/* Apply dynamic class */}
+        <p className="signup-link">
+          Don't have an account?{' '}
+          <span onClick={() => navigate('/register')} className="link">
+            Sign Up
+          </span>
+        </p>
+      </div>
     </div>
   );
 };

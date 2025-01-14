@@ -1,9 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from './axios';
-// import AttendeeList from './AttendeeList';
+import './css/EventDashboard.css';
 
-const EventDashboard = () => {
+const EventDashboard = forwardRef((props, ref) => {
   const [events, setEvents] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [locationFilter, setLocationFilter] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [userId] = useState(localStorage.getItem('userId'));
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -11,32 +19,181 @@ const EventDashboard = () => {
         const response = await api.get('/events');
         setEvents(response.data);
       } catch (error) {
-        console.log('Error fetching events:', error);
+        console.error('Error fetching events:', error);
       }
     };
 
     fetchEvents();
   }, []);
 
+  const handleEdit = (event) => {
+    navigate(`/edit-event/${event._id}`, { state: { event } });
+  };
+
+  const handleDelete = async (eventId) => {
+    try {
+      await api.delete(`/events/${eventId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      setEvents(events.filter((event) => event._id !== eventId));
+    } catch (error) {
+      console.error('Error deleting event:', error);
+    }
+  };
+
+  // Expose the resetFilters function to the parent component
+  useImperativeHandle(ref, () => ({
+    resetFilters: () => {
+      setSearchTerm('');
+      setCategoryFilter('');
+      setLocationFilter('');
+      setStartDate('');
+    },
+  }));
+
+  const filteredEvents = events
+    .filter((event) =>
+      event.title.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .filter((event) =>
+      categoryFilter
+        ? event.category?.toLowerCase().trim() === categoryFilter.toLowerCase().trim()
+        : true
+    )
+    .filter((event) =>
+      locationFilter
+        ? event.location?.toLowerCase().trim().includes(locationFilter.toLowerCase().trim())
+        : true
+    )
+    .filter((event) =>
+      startDate ? new Date(event.date) >= new Date(startDate) : true
+    );
+
+  const upcomingEvents = filteredEvents.filter(
+    (event) => new Date(event.date) >= new Date()
+  );
+
+  const pastEvents = filteredEvents.filter(
+    (event) => new Date(event.date) < new Date()
+  );
+
   return (
-    <div>
-      <h2>Event Dashboard</h2>
-      {events.length === 0 ? (
-        <p>No events available.</p>
-      ) : (
-        <ul>
-          {events.map((event) => (
-            <li key={event._id}>
-              <h3>{event.title}</h3>
-              <p>{event.description}</p>
-              <p>Date: {new Date(event.date).toLocaleString()}</p>
-              {/* <AttendeeList eventId={event._id} /> */}
-            </li>
-          ))}
-        </ul>
-      )}
+    <div className="event-dashboard">
+      <div className="filters">
+        <input
+          type="text"
+          placeholder="Search events..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+        >
+          <option value="">All Categories</option>
+          <option value="Music">Music</option>
+          <option value="Sports">Sports</option>
+          <option value="Education">Education</option>
+          <option value="Technology">Technology</option>
+        </select>
+
+        <input
+          type="text"
+          placeholder="Search by location..."
+          value={locationFilter}
+          onChange={(e) => setLocationFilter(e.target.value)}
+        />
+
+        <div className="date-filter">
+          <input
+            id="start-date"
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <h3 className="section-title">Upcoming Events</h3>
+      <div className="event-grid">
+        {upcomingEvents.length === 0 ? (
+          <p className="no-events-message">No upcoming events available.</p>
+        ) : (
+          upcomingEvents.map((event) => (
+            <div className="event-card" key={event._id}>
+              <h3 className="event-title">{event.title}</h3>
+              <p className="event-description">{event.description}</p>
+              <p className="event-date">
+                <strong>Date:</strong> {new Date(event.date).toLocaleString()}
+              </p>
+              <p className="event-location">
+                <strong>Location:</strong> {event.location || 'N/A'}
+              </p>
+              <p className="event-category">
+                <strong>Category:</strong> {event.category || 'N/A'}
+              </p>
+              {event.creator === userId && (
+                <div className="event-actions">
+                  <button
+                    className="edit-button"
+                    onClick={() => handleEdit(event)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="delete-button"
+                    onClick={() => handleDelete(event._id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
+      <h3 className="section-title">Past Events</h3>
+      <div className="event-grid">
+        {pastEvents.length === 0 ? (
+          <p className="no-events-message">No past events available.</p>
+        ) : (
+          pastEvents.map((event) => (
+            <div className="event-card" key={event._id}>
+              <h3 className="event-title">{event.title}</h3>
+              <p className="event-description">{event.description}</p>
+              <p className="event-date">
+                <strong>Date:</strong> {new Date(event.date).toLocaleString()}
+              </p>
+              <p className="event-location">
+                <strong>Location:</strong> {event.location || 'N/A'}
+              </p>
+              <p className="event-category">
+                <strong>Category:</strong> {event.category || 'N/A'}
+              </p>
+              {event.creator === userId && (
+                <div className="event-actions">
+                  <button
+                    className="edit-button"
+                    onClick={() => handleEdit(event)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="delete-button"
+                    onClick={() => handleDelete(event._id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
-};
+});
 
 export default EventDashboard;
