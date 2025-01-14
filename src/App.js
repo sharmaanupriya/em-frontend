@@ -13,10 +13,13 @@ const App = () => {
   const dashboardRef = useRef(); // Reference to access resetFilters in EventDashboard
 
   const logout = () => {
+    // Clear session data
     localStorage.removeItem('token');
     setToken(null);
+
+    // Reset filters on EventDashboard if applicable
     if (dashboardRef.current) {
-      dashboardRef.current.resetFilters(); // Call resetFilters when logging out
+      dashboardRef.current.resetFilters();
     }
   };
 
@@ -27,13 +30,12 @@ const App = () => {
         <nav className="navbar">
           <div className="navbar-brand">Event Manager</div>
           <div className="navbar-links">
-            {!token && (
+            {!token ? (
               <>
                 <Link to="/register">Register</Link>
                 <Link to="/login">Login</Link>
               </>
-            )}
-            {token && (
+            ) : (
               <>
                 <Link to="/events">Event Dashboard</Link>
                 <Link to="/create-event">Create Event</Link>
@@ -47,14 +49,17 @@ const App = () => {
 
         {/* Routes */}
         <Routes>
-          <Route path="/" element={<Navigate to="/events" replace />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login setToken={setToken} />} />
+          <Route path="/" element={token ? <Navigate to="/events" replace /> : <Navigate to="/login" replace />} />
+          <Route path="/register" element={!token ? <Register /> : <Navigate to="/events" replace />} />
+          <Route path="/login" element={!token ? <Login setToken={setToken} /> : <Navigate to="/events" replace />} />
           <Route
             path="/events"
-            element={<EventDashboard ref={dashboardRef} />} // Pass the ref
+            element={<EventDashboard ref={dashboardRef} token={token} />} // Pass token to EventDashboard
           />
-          <Route path="/create-event" element={<CreateEvent />} />
+          <Route
+            path="/create-event"
+            element={token ? <CreateEvent /> : <Navigate to="/login" replace />} // Protect this route
+          />
         </Routes>
       </div>
     </Router>

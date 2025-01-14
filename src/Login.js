@@ -11,12 +11,17 @@ const Login = ({ setToken }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Attempting to log in with:', email, password);
 
     try {
       const response = await api.post('/auth/login', { email, password });
+      console.log('API Response:', response);
 
-      const { token } = response.data;
-      if (token) {
+      // Destructure the response data
+      const { token, user } = response.data; // Ensure your backend sends user and token
+      if (token && user) {
+        // Save userId and token to localStorage
+        localStorage.setItem('userId', user.id || user._id); // Handle both id and _id
         localStorage.setItem('token', token);
         setToken(token);
         setMessage('Login successful');
@@ -27,11 +32,11 @@ const Login = ({ setToken }) => {
         setMessageType('error'); // Set error message type
       }
     } catch (error) {
-      setMessage('Login failed');
-      setMessageType('error'); // Set error message type
+      console.error('Error during login:', error);
+      setMessage('Login failed: ' + (error.response?.data?.message || 'Server error'));
     }
   };
-
+  
   return (
     <div className="login-container">
       <div className="login-box">
