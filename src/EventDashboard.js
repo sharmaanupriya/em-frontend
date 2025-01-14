@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from './axios';
 import './css/EventDashboard.css';
 
-const EventDashboard = forwardRef((props, ref) => {
+const EventDashboard = forwardRef(({ token }, ref) => {
   const [events, setEvents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -27,19 +27,26 @@ const EventDashboard = forwardRef((props, ref) => {
   }, []);
 
   const handleEdit = (event) => {
-    navigate(`/edit-event/${event._id}`, { state: { event } });
+    navigate('/create-event', { state: { event } }); // Navigate to Create Event route with event data
   };
 
   const handleDelete = async (eventId) => {
+    // Show confirmation dialog
+    const confirmDelete = window.confirm('Are you sure you want to delete this event?');
+    if (!confirmDelete) return; // Exit if the user cancels
+  
     try {
-      await api.delete(`/events/${eventId}`, {
+      const response = await api.delete(`/events/${eventId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      setEvents(events.filter((event) => event._id !== eventId));
+      console.log('Delete response:', response.data);
+      setEvents((prevEvents) => prevEvents.filter((event) => event._id !== eventId)); // Update state
+      alert('Event deleted successfully');
     } catch (error) {
-      console.error('Error deleting event:', error);
+      console.error('Error deleting event:', error.response?.data || error.message);
+      alert('Failed to delete event. Please try again.');
     }
-  };
+  };    
 
   // Expose the resetFilters function to the parent component
   useImperativeHandle(ref, () => ({
@@ -133,7 +140,7 @@ const EventDashboard = forwardRef((props, ref) => {
               <p className="event-category">
                 <strong>Category:</strong> {event.category || 'N/A'}
               </p>
-              {event.creator === userId && (
+              {token && event.creator === userId && (
                 <div className="event-actions">
                   <button
                     className="edit-button"
@@ -172,7 +179,7 @@ const EventDashboard = forwardRef((props, ref) => {
               <p className="event-category">
                 <strong>Category:</strong> {event.category || 'N/A'}
               </p>
-              {event.creator === userId && (
+              {token && event.creator === userId && (
                 <div className="event-actions">
                   <button
                     className="edit-button"
