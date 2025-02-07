@@ -9,40 +9,22 @@ import './css/Login.css';
 import './css/App.css';
 
 const App = () => {
-  const [token, setToken] = useState(localStorage.getItem('token') || null);
-  const [isGuest, setIsGuest] = useState(localStorage.getItem('guest') === 'true');
-  const [username, setUsername] = useState(localStorage.getItem("username") || "");
+  // ✅ Directly initializing state from localStorage
+  const [token, setToken] = useState(() => localStorage.getItem('token'));
+  const [isGuest, setIsGuest] = useState(() => localStorage.getItem('guest') === 'true');
+  const [username, setUsername] = useState(() => localStorage.getItem('username') || "");
   const location = useLocation();
-  const navigate = useNavigate(); // ✅ Use navigate to redirect after logout
+  const navigate = useNavigate();
   const dashboardRef = useRef();
-  
+
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUsername = localStorage.getItem('username');
-    const storedGuest = localStorage.getItem('guest');
-  
     console.log("📌 Checking Local Storage on Page Load:");
-    console.log("📌 Token:", storedToken);
-    console.log("📌 Username:", storedUsername);
-    console.log("📌 Is Guest:", storedGuest);
-  
-    if (storedToken) {
-      setToken(storedToken);
-    }
-    if (storedUsername) {
-      setUsername(storedUsername);
-    }
-    if (storedGuest === 'true') {
-      setIsGuest(true);
-    } else {
-      setIsGuest(false);
-    }
-  }, []);
-  
-  
+    console.log("📌 Token:", token);
+    console.log("📌 Username:", username);
+    console.log("📌 Is Guest:", isGuest);
+  }, [token, username, isGuest]); // ✅ Log only when values change
 
   const logout = () => {
-    // ✅ Clear session data
     localStorage.removeItem('token');
     localStorage.removeItem('guest');
     localStorage.removeItem("username");
@@ -50,16 +32,13 @@ const App = () => {
     setIsGuest(false);
     setUsername("");
 
-    // ✅ Reset filters on EventDashboard if applicable
     if (dashboardRef.current) {
       dashboardRef.current.resetFilters();
     }
 
-    // ✅ Redirect to login page after logout
     navigate("/login");
   };
 
-  // ✅ Check if the user is on the login or register page
   const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
 
   return (
@@ -97,7 +76,6 @@ const App = () => {
                   )}
                 </>
               )}
-              {/* {!isGuest && <button className="logout-button" onClick={logout}>Logout</button>} */}
             </>
           )}
         </div>
@@ -108,7 +86,6 @@ const App = () => {
         <Route path="/" element={<Navigate to={!token && !isGuest ? "/login" : "/events"} replace />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login setToken={setToken} setIsGuest={setIsGuest} setUsername={setUsername} />} />
-        {/* <Route path="/login" element={<Login setToken={setToken} setIsGuest={setIsGuest} />} /> */}
         <Route path="/events" element={<EventDashboard ref={dashboardRef} token={token} isGuest={isGuest} />} />
         <Route path="/create-event" element={<CreateEvent isGuest={isGuest} />} />
       </Routes>
