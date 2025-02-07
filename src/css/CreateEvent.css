@@ -102,3 +102,18 @@ body {
     color: #dc3545;
   }
   
+  .guest-warning {
+    text-align: center;
+    margin-top: 50px;
+    padding: 20px;
+    background-color: #ffdddd;
+    border: 1px solid red;
+    color: red;
+  }
+  
+  .login-link {
+    color: blue;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  
