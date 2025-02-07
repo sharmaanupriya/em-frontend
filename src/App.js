@@ -9,8 +9,7 @@ import './css/Login.css';
 import './css/App.css';
 
 const App = () => {
-  // ✅ Directly initializing state from localStorage
-  const [token, setToken] = useState(() => localStorage.getItem('token'));
+  const [token, setToken] = useState(() => localStorage.getItem('token') || null);
   const [isGuest, setIsGuest] = useState(() => localStorage.getItem('guest') === 'true');
   const [username, setUsername] = useState(() => localStorage.getItem('username') || "");
   const location = useLocation();
@@ -18,11 +17,17 @@ const App = () => {
   const dashboardRef = useRef();
 
   useEffect(() => {
-    console.log("📌 Checking Local Storage on Page Load:");
-    console.log("📌 Token:", token);
-    console.log("📌 Username:", username);
-    console.log("📌 Is Guest:", isGuest);
-  }, [token, username, isGuest]); // ✅ Log only when values change
+    const storedToken = localStorage.getItem('token');
+    const storedGuest = localStorage.getItem('guest');
+    const storedUsername = localStorage.getItem('username');
+
+    if (storedToken) setToken(storedToken);
+    if (storedGuest === 'true') setIsGuest(true);
+    else setIsGuest(false);
+    if (storedUsername) setUsername(storedUsername);
+
+    console.log("📌 Token Persisted:", storedToken);
+  }, []);
 
   const logout = () => {
     localStorage.removeItem('token');
@@ -43,7 +48,6 @@ const App = () => {
 
   return (
     <div>
-      {/* Navigation Bar */}
       <nav className="navbar">
         <div className="navbar-brand">Event Manager</div>
         <div className="navbar-links">
@@ -81,7 +85,6 @@ const App = () => {
         </div>
       </nav>
 
-      {/* Routes */}
       <Routes>
         <Route path="/" element={<Navigate to={!token && !isGuest ? "/login" : "/events"} replace />} />
         <Route path="/register" element={<Register />} />
