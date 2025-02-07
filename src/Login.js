@@ -1,42 +1,56 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from './axios';
 
-const Login = ({ setToken }) => {
+const Login = ({ setToken, setIsGuest, setUsername }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState(''); // To differentiate between success and error messages
+  const [messageType, setMessageType] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectPath = new URLSearchParams(location.search).get("redirect");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Attempting to log in with:', email, password);
-
     try {
       const response = await api.post('/auth/login', { email, password });
-      console.log('API Response:', response);
-
-      // Destructure the response data
-      const { token, user } = response.data; // Ensure your backend sends user and token
+      console.log("🚀 Full API Response:", response.data);  // ✅ Log full response
+  
+      const { token, user } = response.data;
+  
       if (token && user) {
-        // Save userId and token to localStorage
-        localStorage.setItem('userId', user.id || user._id); // Handle both id and _id
+        console.log("✅ Storing Username:", user.username); // ✅ Log username before storing
+  
+        localStorage.setItem('userId', user.id || user._id);
+        localStorage.setItem('username', user.username || "");  // ✅ Save username correctly
         localStorage.setItem('token', token);
+  
         setToken(token);
-        setMessage('Login successful');
-        setMessageType('success'); // Set success message type
-        navigate('/'); // Redirect to the home page after successful login
+        setUsername(user.username || ""); // ✅ Update state
+        setIsGuest(false);
+  
+        navigate(redirectPath ? `/${redirectPath}` : "/events");
       } else {
         setMessage('Login failed, no token returned');
-        setMessageType('error'); // Set error message type
+        setMessageType('error');
       }
     } catch (error) {
-      console.error('Error during login:', error);
+      console.error("❌ Login Error:", error);
       setMessage('Login failed: ' + (error.response?.data?.message || 'Server error'));
+      setMessageType('error');
     }
   };
   
+  
+  // ✅ Guest Login Function - Sets Guest Mode & Navigates Immediately
+  const handleGuestLogin = () => {
+    localStorage.setItem('guest', 'true'); // Mark user as guest
+    setIsGuest(true); // Update guest state
+    setUsername("");
+    navigate('/events'); // Redirect to event dashboard
+  };
+
   return (
     <div className="login-container">
       <div className="login-box">
@@ -58,8 +72,14 @@ const Login = ({ setToken }) => {
           />
           <button type="submit" className="login-button">Login</button>
         </form>
-        {message && <p className={`message ${messageType}`}>{message}</p>} {/* Apply dynamic class */}
-        <p className="signup-link">
+
+        {/* ✅ Guest Login Button */}
+        <button className="guest-login-button" onClick={handleGuestLogin}>
+          Guest Login
+        </button>
+
+        {message && <p className={`message ${messageType}`}>{message}</p>}
+        <p className="signin-link">
           Don't have an account?{' '}
           <span onClick={() => navigate('/register')} className="link">
             Sign Up
