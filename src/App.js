@@ -20,14 +20,19 @@ const App = () => {
     const storedToken = localStorage.getItem('token');
     const storedGuest = localStorage.getItem('guest');
     const storedUsername = localStorage.getItem('username');
-
-    if (storedToken) setToken(storedToken);
-    if (storedGuest === 'true') setIsGuest(true);
-    else setIsGuest(false);
+  
+    if (storedToken) {
+      setToken(storedToken);
+      setIsGuest(false); // ✅ Override guest mode if token exists
+    } else {
+      setToken(null);
+      setIsGuest(storedGuest === 'true'); // ✅ Only set guest if no token
+    }
+  
     if (storedUsername) setUsername(storedUsername);
-
-    console.log("📌 Token Persisted:", storedToken);
-  }, []);
+  
+    console.log("📌 Persisted Token:", storedToken);
+  }, []);  
 
   const logout = () => {
     localStorage.removeItem('token');

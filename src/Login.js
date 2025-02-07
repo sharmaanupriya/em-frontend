@@ -15,21 +15,22 @@ const Login = ({ setToken, setIsGuest, setUsername }) => {
     e.preventDefault();
     try {
       const response = await api.post('/auth/login', { email, password });
-      console.log("🚀 Full API Response:", response.data);  // ✅ Log full response
-  
+      console.log("🚀 Full API Response:", response.data);
+
       const { token, user } = response.data;
-  
+
       if (token && user) {
-        console.log("✅ Storing Username:", user.username); // ✅ Log username before storing
-  
+        console.log("✅ Storing Username:", user.username);
+
         localStorage.setItem('userId', user.id || user._id);
-        localStorage.setItem('username', user.username || "");  // ✅ Save username correctly
+        localStorage.setItem('username', user.username || "");
         localStorage.setItem('token', token);
-  
+        localStorage.removeItem('guest'); // ✅ Remove guest mode on login
+
         setToken(token);
-        setUsername(user.username || ""); // ✅ Update state
-        setIsGuest(false);
-  
+        setUsername(user.username || "");
+        setIsGuest(false); // ✅ Ensure guest mode is turned off
+
         navigate(redirectPath ? `/${redirectPath}` : "/events");
       } else {
         setMessage('Login failed, no token returned');
@@ -41,14 +42,16 @@ const Login = ({ setToken, setIsGuest, setUsername }) => {
       setMessageType('error');
     }
   };
-  
-  
-  // ✅ Guest Login Function - Sets Guest Mode & Navigates Immediately
+
+  // ✅ Guest Login - Ensures proper handling
   const handleGuestLogin = () => {
-    localStorage.setItem('guest', 'true'); // Mark user as guest
-    setIsGuest(true); // Update guest state
+    localStorage.setItem('guest', 'true'); 
+    localStorage.removeItem('token'); // ✅ Remove any existing login token
+    setIsGuest(true);
+    setToken(null);
     setUsername("");
-    navigate('/events'); // Redirect to event dashboard
+
+    navigate('/events');
   };
 
   return (
