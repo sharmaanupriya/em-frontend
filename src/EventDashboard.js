@@ -31,23 +31,18 @@ const EventDashboard = forwardRef(({ token, isGuest }, ref) => {
 
   // ✅ Real-time event updates with WebSockets
   useEffect(() => {
+    if (!socket) return;
+
+    // Join events only when events list is first fetched or updated
     events.forEach((event) => {
       socket.emit("join_event", event._id);
     });
 
-    socket.on("update_attendees", ({ eventId, count }) => {
-      setEvents((prevEvents) =>
-        prevEvents.map((event) =>
-          event._id === eventId ? { ...event, attendeeCount: count } : event
-        )
-      );
-    });
-
     return () => {
+      // Cleanup: Leave events when component unmounts
       events.forEach((event) => {
         socket.emit("leave_event", event._id);
       });
-      socket.off("update_attendees");
     };
   }, [events, socket]);
 
@@ -133,17 +128,17 @@ const EventDashboard = forwardRef(({ token, isGuest }, ref) => {
             <div className="event-card" key={event._id}>
               {event.imageUrl && (
                 <img
-                src={event.imageUrl}
-                alt={event.title}
-                style={{
-                  width: "100%",
-                  height: "150px",
-                  objectFit: "contain", // ✅ Prevents cropping
-                  borderRadius: "5px",
-                  backgroundColor: "#f8f8f8", // ✅ Ensures background fills empty spaces
-                }}
-              />
-              
+                  src={event.imageUrl}
+                  alt={event.title}
+                  style={{
+                    width: "100%",
+                    height: "150px",
+                    objectFit: "contain", // ✅ Prevents cropping
+                    borderRadius: "5px",
+                    backgroundColor: "#f8f8f8", // ✅ Ensures background fills empty spaces
+                  }}
+                />
+
               )}
               <h3 className="event-title">{event.title}</h3>
               <p className="event-description">{event.description}</p>
@@ -173,17 +168,17 @@ const EventDashboard = forwardRef(({ token, isGuest }, ref) => {
             <div className="event-card" key={event._id}>
               {event.imageUrl && (
                 <img
-                src={event.imageUrl}
-                alt={event.title}
-                style={{
-                  width: "100%",
-                  height: "150px",
-                  objectFit: "contain", // ✅ Prevents cropping
-                  borderRadius: "5px",
-                  backgroundColor: "#f8f8f8", // ✅ Ensures background fills empty spaces
-                }}
-              />
-              
+                  src={event.imageUrl}
+                  alt={event.title}
+                  style={{
+                    width: "100%",
+                    height: "150px",
+                    objectFit: "contain", // ✅ Prevents cropping
+                    borderRadius: "5px",
+                    backgroundColor: "#f8f8f8", // ✅ Ensures background fills empty spaces
+                  }}
+                />
+
               )}
               <h3 className="event-title">{event.title}</h3>
               <p className="event-description">{event.description}</p>
@@ -191,8 +186,8 @@ const EventDashboard = forwardRef(({ token, isGuest }, ref) => {
               <p className="event-location"><strong>Location:</strong> {event.location || 'N/A'}</p>
               <p className="event-category"><strong>Category:</strong> {event.category || 'N/A'}</p>
 
-               {/* ✅ Show Edit/Delete Buttons Only for the Event Creator */}
-               {token && String(event.creator) === String(userId) && (
+              {/* ✅ Show Edit/Delete Buttons Only for the Event Creator */}
+              {token && String(event.creator) === String(userId) && (
                 <div className="event-actions">
                   <button className="edit-button" onClick={() => handleEdit(event)}>Edit</button>
                   <button className="delete-button" onClick={() => handleDelete(event._id)}>Delete</button>
